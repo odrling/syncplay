@@ -9,14 +9,16 @@ import re
 import sys
 import threading
 import time
+import urllib.parse
 from copy import deepcopy
+from fnmatch import fnmatch
 from functools import wraps
 from urllib.parse import urlparse
 
 from twisted.application.internet import ClientService
+from twisted.internet import defer, reactor, task, threads
 from twisted.internet.endpoints import HostnameEndpoint
 from twisted.internet.protocol import ClientFactory
-from twisted.internet import reactor, task, defer, threads
 
 try:
     import certifi
@@ -36,10 +38,10 @@ try:
 except:
     pass
 
-from syncplay import utils, constants, version
-from syncplay.constants import PRIVACY_SENDHASHED_MODE, PRIVACY_DONTSEND_MODE, \
-    PRIVACY_HIDDENFILENAME
-from syncplay.messages import getMissingStrings, getMessage, isNoOSDMessage
+from syncplay import constants, utils, version
+from syncplay.constants import (PRIVACY_DONTSEND_MODE, PRIVACY_HIDDENFILENAME,
+                                PRIVACY_SENDHASHED_MODE)
+from syncplay.messages import getMessage, getMissingStrings, isNoOSDMessage
 from syncplay.protocols import SyncClientProtocol
 from syncplay.utils import isMacOS
 
@@ -1083,7 +1085,14 @@ class SyncplayClient(object):
 
     def checkForUpdate(self, userInitiated):
         try:
-            import urllib.request, urllib.parse, urllib.error, syncplay, sys, json, platform
+            import json
+            import platform
+            import sys
+            import urllib.error
+            import urllib.parse
+            import urllib.request
+
+            import syncplay
             try:
                 architecture = platform.architecture()[0]
             except:
@@ -1769,15 +1778,14 @@ class SyncplayPlaylist():
                         currentPlaylistFilename = None
                     if currentPlaylistFilename != pathWithoutDirs:
                         if pathWithoutDirs not in self._playlist:
-                            if utils.isURL(delayedLoadPath) or utils.isURL(currentPlaylistFilename):
-                                self._client.ui.addFileToPlaylist(delayedLoadPath)
+                            foundFilePath = self._client.fileSwitch.findFilepath(currentPlaylistFilename, highPriority=True)
+                            if foundFilePath is None:
+                                if utils.isURL(delayedLoadPath) or utils.isURL(currentPlaylistFilename):
+                                    self._client.ui.addFileToPlaylist(delayedLoadPath)
+                                self._client.openFile(delayedLoadPath, resetPosition=False)
                             else:
-                                foundFilePath = self._client.fileSwitch.findFilepath(currentPlaylistFilename, highPriority=True)
-                                if foundFilePath is None:
-                                    self._client.openFile(delayedLoadPath, resetPosition=False)
-                                else:
-                                    self._client.ui.showMessage("{}: {}...".format(getMessage("addfilestoplaylist-menu-label"), pathWithoutDirs))
-                                    reactor.callLater(constants.DELAYED_LOAD_WAIT_TIME, self._client.ui.addFileToPlaylist, delayedLoadPath, ) # TODO: Avoid arbitary pause
+                                self._client.ui.showMessage("{}: {}...".format(getMessage("addfilestoplaylist-menu-label"), pathWithoutDirs))
+                                reactor.callLater(constants.DELAYED_LOAD_WAIT_TIME, self._client.ui.addFileToPlaylist, delayedLoadPath, ) # TODO: Avoid arbitary pause
                         else:
                             self._client.ui.showErrorMessage(getMessage("cannot-add-duplicate-error").format(pathWithoutDirs))
 
@@ -1827,10 +1835,10 @@ class SyncplayPlaylist():
                 if index is None:
                     return False
                 filename = self._playlist[index]
+                path = self._client.fileSwitch.findFilepath(filename, highPriority=True)
                 if utils.isURL(filename):
                     return True if self._client.isURITrusted(filename) else False
-                else:
-                    path = self._client.fileSwitch.findFilepath(filename, highPriority=True)
+
                 return True if path else False
             except:
                 return False
@@ -1854,14 +1862,13 @@ class SyncplayPlaylist():
                 return
             filename = self._playlist[index]
             # TODO: Handle isse with index being None
-            if utils.isURL(filename):
+            path = self._client.fileSwitch.findFilepath(filename, highPriority=True)
+            if path is None and utils.isURL(filename):
                 if self._client.isURITrusted(filename):
                     self._client.openFile(filename, resetPosition=resetPosition)
                 else:
                     self._ui.showErrorMessage(getMessage("cannot-add-unsafe-path-error").format(filename))
                 return
-            else:
-                path = self._client.fileSwitch.findFilepath(filename, highPriority=True)
             if path:
                 self._client.openFile(path, resetPosition)
             else:
@@ -2176,6 +2183,9 @@ class FileSwitchManager(object):
     def findFilepath(self, filename, highPriority=False):
         if filename is None:
             return
+
+        if utils.isURL(filename):
+            filename = urllib.parse.unquote(filename.split('/')[-1])
 
         if self._client.userlist.currentUser.file and utils.sameFilename(filename, self._client.userlist.currentUser.file['name']):
             return self._client.userlist.currentUser.file['path']
