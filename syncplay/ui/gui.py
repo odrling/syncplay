@@ -866,14 +866,13 @@ class MainWindow(QtWidgets.QMainWindow):
         filename = item.data()
         if self._isTryingToChangeToCurrentFile(filename):
             return
-        if isURL(filename):
+        pathFound = self._syncplayClient.fileSwitch.findFilepath(filename, highPriority=True)
+        if pathFound:
+            self._syncplayClient.openFile(pathFound, resetPosition=True)
+        elif isURL(filename):
             self._syncplayClient.openFile(filename, resetPosition=True)
         else:
-            pathFound = self._syncplayClient.fileSwitch.findFilepath(filename, highPriority=True)
-            if pathFound:
-                self._syncplayClient.openFile(pathFound, resetPosition=True)
-            else:
-                self._syncplayClient.ui.showErrorMessage(getMessage("cannot-find-file-for-playlist-switch-error").format(filename))
+            self._syncplayClient.ui.showErrorMessage(getMessage("cannot-find-file-for-playlist-switch-error").format(filename))
 
     def _isTryingToChangeToCurrentFile(self, filename):
         if self._syncplayClient.userlist.currentUser.file and filename == self._syncplayClient.userlist.currentUser.file["name"]:
