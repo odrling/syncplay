@@ -2133,7 +2133,8 @@ class SyncplayPlaylist():
             self._ui.showDebugMessage("Not playing current index - Index none or length issue")
             return True
         currentPlaylistFilename = self._playlist[self._playlistIndex]
-        if self._client.userlist.currentUser.file and currentPlaylistFilename == self._client.userlist.currentUser.file['name']:
+        current_file = self._client.userlist.currentUser.file
+        if current_file and utils.stripfilename(currentPlaylistFilename, utils.isURL(currentPlaylistFilename)) == utils.stripfilename(current_file['name'], utils.isURL(current_file['name'])):
             return False
         else:
             self._ui.showDebugMessage("Not playing current index - Filename mismatch or no file")
