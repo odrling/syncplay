@@ -1941,9 +1941,9 @@ class SyncplayPlaylist():
             filename = self._playlist[index]
             # TODO: Handle isse with index being None
             path = self._client.fileSwitch.findFilepath(filename, highPriority=True)
-            if path is None and utils.isURL(filename):
-                if self._client.isURITrusted(filename):
-                    self._client.openFile(filename, resetPosition=resetPosition)
+            if path is None and utils.isURL(path):
+                if self._client.isURITrusted(path):
+                    self._client.openFile(path, resetPosition=resetPosition)
                 else:
                     self._ui.showErrorMessage(getMessage("cannot-add-unsafe-path-error").format(filename))
                 return
