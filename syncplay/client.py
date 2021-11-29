@@ -1909,11 +1909,15 @@ class SyncplayPlaylist():
                     return False
                 filename = self._playlist[index]
                 path = self._client.fileSwitch.findFilepath(filename, highPriority=True)
-                if utils.isURL(filename):
-                    return True if self._client.isURITrusted(filename) else False
+                if path:
+                    if utils.isURL(path):
+                        if not self._client.isURITrusted(path):
+                            return False
 
-                return True if path else False
-            except:
+                    self._client.playlist.changeToPlaylistIndex(index, resetPosition=True)
+                    return True
+
+            except Exception:  # IndexError?
                 return False
         return False
 
