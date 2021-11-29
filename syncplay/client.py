@@ -1921,8 +1921,6 @@ class SyncplayPlaylist():
 
         with open(path) as f:
             newPlaylist = f.read().splitlines()
-            if shuffle:
-                random.shuffle(newPlaylist)
             if newPlaylist:
                 self.changePlaylist(newPlaylist, username=None, resetIndex=True)
 
