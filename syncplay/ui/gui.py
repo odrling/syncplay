@@ -875,11 +875,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self._syncplayClient.playlist.changeToPlaylistIndexFromFilename(filename)
 
     def _isTryingToChangeToCurrentFile(self, filename):
-        if self._syncplayClient.userlist.currentUser.file and filename == self._syncplayClient.userlist.currentUser.file["name"]:
-            self.showDebugMessage("File change request ignored (Syncplay should not be asked to change to current filename)")
-            return True
-        else:
-            return False
+        filename = utils.stripfilename(filename, isURL(filename))
+        current = self._syncplayClient.userlist.currentUser.file["name"]
+        if current:
+            current = utils.stripfilename(current, isURL(current))
+            if filename == current:
+                self.showDebugMessage("File change request ignored (Syncplay should not be asked to change to current filename)")
+                return True
+
+        return False
 
     def roomClicked(self, item):
         username = item.sibling(item.row(), 0).data()
