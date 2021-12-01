@@ -1945,6 +1945,10 @@ class SyncplayPlaylist():
             filename = self._playlist[index]
             # TODO: Handle isse with index being None
             path = self._client.fileSwitch.findFilepath(filename, highPriority=True)
+            current_file = self._client.userlist.currentUser.file
+            if current_file and path == current_file['path']:
+                return
+
             if path is None and utils.isURL(path):
                 if self._client.isURITrusted(path):
                     self._client.openFile(path, resetPosition=resetPosition)
