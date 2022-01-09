@@ -2157,10 +2157,12 @@ class SyncplayPlaylist():
             return True
 
     def _nextPlaylistIndex(self):
+        if not self.notJustChangedPlaylist():
+            return self._playlistIndex
         if self._playlistIsAtEnd():
             return 0
         else:
-            return self._playlistIndex+1
+            return self._playlistIndex + 1
 
     def _playlistIsAtEnd(self):
         return len(self._playlist) <= self._playlistIndex+1
