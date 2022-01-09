@@ -127,8 +127,8 @@ class SyncplayClient(object):
         self._userOffset = 0.0
         self._speedChanged = False
         self.behindFirstDetected = None
-        self.autoPlay = False
-        self.autoPlayThreshold = None
+        self.autoPlay = config['autoplayInitialState']
+        self.autoPlayThreshold = config['autoplayMinUsers']
 
         self.autoplayTimer = task.LoopingCall(self.autoplayCountdown)
         self.autoplayTimeLeft = constants.AUTOPLAY_DELAY
@@ -255,15 +255,13 @@ class SyncplayClient(object):
     def prepareToAdvancePlaylist(self):
         if self.playlist.canSwitchToNextPlaylistIndex():
             self.ui.showDebugMessage("Preparing to advance playlist...")
-            self.lastAdvanceTime = time.time()
             self._protocol.sendState(0, True, True, None, True)
         else:
             self.ui.showDebugMessage("Not preparing to advance playlist because the next file cannot be switched to")
 
     def _recentlyAdvanced(self):
-        lastAdvandedDiff = time.time() - self.lastAdvanceTime if self.lastAdvanceTime else None
-        if lastAdvandedDiff is not None and lastAdvandedDiff < constants.AUTOPLAY_DELAY + 5:
-            return True
+        lastAdvandedDiff = time.time() - self.lastUpdatedFileTime if self.lastUpdatedFileTime else None
+        return lastAdvandedDiff is not None and lastAdvandedDiff < constants.AUTOPLAY_DELAY + 15
 
     def recentlyConnected(self):
         connectDiff = time.time() - self.lastConnectTime if self.lastConnectTime else None
@@ -531,6 +529,7 @@ class SyncplayClient(object):
         self.userlist.currentUser.setFile(filename, duration, size, path)
         self.sendFile()
         self.playlist.changeToPlaylistIndexFromFilename(filename)
+        self.autoplayCheck()
 
     def setTrustedDomains(self, newTrustedDomains):
         from syncplay.ui.ConfigurationGetter import ConfigurationGetter
@@ -1887,7 +1886,7 @@ class SyncplayPlaylist():
     def switchToNewPlaylistIndex(self, index, resetPosition = False):
         try:
             self.queuedIndexFilename = self._playlist[index]
-        except:
+        except Exception:
             self.queuedIndexFilename = None
             self._ui.showDebugMessage("Failed to find index {} in plauylist".format(index))
         self._lastPlaylistIndexChange = time.time()
@@ -1917,6 +1916,7 @@ class SyncplayPlaylist():
             else:
                 self._ui.showErrorMessage(getMessage("cannot-find-file-for-playlist-switch-error").format(filename))
                 return
+
         except IndexError:
             self._ui.showDebugMessage("Could not change playlist index due to IndexError")
 
