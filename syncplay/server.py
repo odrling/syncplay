@@ -5,6 +5,7 @@ import os
 import random
 import time
 import json
+import requests
 from string import Template
 
 from twisted.enterprise import adbapi
@@ -27,7 +28,7 @@ from syncplay.utils import RoomPasswordProvider, NotControlledRoom, RandomString
 class SyncFactory(Factory):
     def __init__(self, port='', password='', motdFilePath=None, roomsDbFile=None, permanentRoomsFile=None, isolateRooms=False, salt=None,
                  disableReady=False, disableChat=False, maxChatMessageLength=constants.MAX_CHAT_MESSAGE_LENGTH,
-                 maxUsernameLength=constants.MAX_USERNAME_LENGTH, statsDbFile=None, tlsCertPath=None):
+                 maxUsernameLength=constants.MAX_USERNAME_LENGTH, statsDbFile=None, tlsCertPath=None, discordWebhook=None):
         self.isolateRooms = isolateRooms
         syncplay.messages.setLanguage(syncplay.messages.getInitialLanguage())
         print(getMessage("welcome-server-notification").format(syncplay.version))
@@ -67,6 +68,7 @@ class SyncFactory(Factory):
             self.certPath = None
             self.options = None
             self.serverAcceptsTLS = False
+        self.discordWebhook = discordWebhook
 
     def loadListFromMultilineTextFile(self, path):
         if not os.path.isfile(path):
@@ -214,6 +216,16 @@ class SyncFactory(Factory):
         message = truncateText(message, self.maxChatMessageLength)
         messageDict = {"message": message, "username": watcher.getName()}
         self._roomManager.broadcastRoom(watcher, lambda w: w.sendChatMessage(messageDict))
+
+        if self.discordWebhook is not None:
+            self.webhookChatMessage(watcher, message)
+
+    def webhookChatMessage(self, watcher, message):
+        data = {
+            'username': f"[Syncplay] {watcher.getName()}",
+            'content': message
+        }
+        requests.post(self.discordWebhook, data=data)
 
     def setReady(self, watcher, isReady, manuallyInitiated=True):
         watcher.setReady(isReady)
@@ -932,3 +944,4 @@ class ConfigurationGetter(object):
         self._argparser.add_argument('--max-username-length', metavar='maxUsernameLength', type=int, nargs='?', help=getMessage("server-maxusernamelength-argument").format(constants.MAX_USERNAME_LENGTH))
         self._argparser.add_argument('--stats-db-file', metavar='file', type=str, nargs='?', help=getMessage("server-stats-db-file-argument"))
         self._argparser.add_argument('--tls', metavar='path', type=str, nargs='?', help=getMessage("server-startTLS-argument"))
+        self._argparser.add_argument('--discord-webhook', metavar='discordWebhook', type=str, nargs='?', help=getMessage("server-discord-webhook-argument"))

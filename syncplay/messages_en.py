@@ -486,6 +486,7 @@ en = {
     "server-startTLS-argument": "Enable TLS connections using the certificate files in the path provided",
     "server-messed-up-motd-unescaped-placeholders": "Message of the Day has unescaped placeholders. All $ signs should be doubled ($$).",
     "server-messed-up-motd-too-long": "Message of the Day is too long - maximum of {} chars, {} given.",
+    "server-discord-webhook-argument": "Discord webhook URL to send notifications to",
 
     # Server errors
     "unknown-command-server-error": "Unknown command {}",  # message
