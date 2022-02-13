@@ -32,7 +32,7 @@ class MpvPlayer(BasePlayer):
     def run(client, playerPath, filePath, args):
         try:
             ver = MpvPlayer.RE_VERSION.search(subprocess.check_output([playerPath, '--version']).decode('utf-8'))
-        except:
+        except Exception:
             ver = None
         constants.MPV_NEW_VERSION = ver is None or int(ver.group(1)) > 0 or int(ver.group(2)) >= 23
         if not constants.MPV_NEW_VERSION:
@@ -646,7 +646,7 @@ class MpvPlayer(BasePlayer):
             self.readyToSend = False
             try:
                 self.mpvpipe.terminate()
-            except: #When mpv is already closed
+            except Exception: #When mpv is already closed
                 pass
             self.__playerController.reactor.callFromThread(self.__playerController._client.stop, False)
 
