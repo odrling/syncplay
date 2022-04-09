@@ -220,9 +220,6 @@ class MpvPlayer(BasePlayer):
             self._paused = self._client.getGlobalPaused()
             #self._client.ui.showDebugMessage("STORING GLOBAL PAUSED AS FILE IS NOT LOADED")
 
-    def lineReceived(self, line):
-        pass
-
     def property_update(self, name, value):
         if value is None:
             return
@@ -341,7 +338,7 @@ class MpvPlayer(BasePlayer):
         self._listener.sendLine(["script-message-to", "syncplayintf", "set_syncplayintf_options",  options_string])
         self._setOSDPosition()
 
-    def _handleUnknownLine(self, line):
+    def lineReceived(self, line):
         self.mpvErrorCheck(line)
         if "<chat>" in line:
             line = line.replace(constants.MPV_INPUT_BACKSLASH_SUBSTITUTE_CHARACTER, "\\")
