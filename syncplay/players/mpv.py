@@ -344,31 +344,8 @@ class MpvPlayer(BasePlayer):
             line = line.replace(constants.MPV_INPUT_BACKSLASH_SUBSTITUTE_CHARACTER, "\\")
             self._listener.sendChat(line[6:-7])
 
-        if "<paused=" in line and ", pos=" in line:
-            update_string = line.replace(">", "<").replace("=", "<").replace(", ", "<").split("<")
-            paused_update = update_string[2]
-            position_update = update_string[4]
-            if paused_update == "nil":
-                self._storePauseState(float(self._client.getGlobalPaused()))
-            else:
-                self._storePauseState(bool(paused_update == 'true'))
-            if position_update == "nil":
-                self._storePosition(float(self._client.getGlobalPosition()))
-            else:
-                self._storePosition(float(position_update))
-            #self._client.ui.showDebugMessage("{} = {} / {}".format(update_string, paused_update, position_update))
-
         if "<get_syncplayintf_options>" in line:
             self.sendMpvOptions()
-
-        if line == "<SyncplayUpdateFile>" or "Playing:" in line:
-            self._client.ui.showDebugMessage("Not ready to send due to <SyncplayUpdateFile>")
-            self._listener.setReadyToSend(False)
-            self._clearFileLoaded()
-
-        elif line == "</SyncplayUpdateFile>":
-            self._listener.setReadyToSend(True)
-            self._client.ui.showDebugMessage("Ready to send due to </SyncplayUpdateFile>")
 
         elif "Failed" in line or "failed" in line or "No video or audio streams selected" in line or "error" in line:
             self._client.ui.showDebugMessage("Not ready to send due to error")
