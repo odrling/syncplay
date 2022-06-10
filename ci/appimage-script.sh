@@ -113,6 +113,12 @@ export OUTPUT=Syncplay-$VERSION-x86_64.AppImage
 	-l /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0 \
 	-l /usr/lib/x86_64-linux-gnu/libxkbcommon-x11.so.0 \
 	-l /usr/lib/x86_64-linux-gnu/libxcb.so.1 \
+	-l /usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0 \
+	-l /usr/lib/x86_64-linux-gnu/libpango-1.0.so.0 \
+	-l /usr/lib/x86_64-linux-gnu/libpangoft2-1.0.so.0 \
+	-l /usr/lib/x86_64-linux-gnu/libpangocairo-1.0.so.0 \
+	-l /usr/lib/x86_64-linux-gnu/libthai.so.0 \
+	-l /usr/lib/x86_64-linux-gnu/librsvg-2.so.2 \
 ;
 
 mv Syncplay*.AppImage "$OLD_CWD"
