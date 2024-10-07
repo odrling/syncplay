@@ -382,7 +382,7 @@ class MpvPlayer(BasePlayer):
     def file_ready(self, *_):
         self._listener.setReadyToSend(True)
         self._client.ui.showDebugMessage("Ready to send due to </SyncplayUpdateFile>")
-        self.sendMpvOptions()
+        self._sendMpvOptions()
 
     def _onFileUpdate(self):
         if not all((self.fileLoaded, self._filename, self._duration, self._filepath)):
